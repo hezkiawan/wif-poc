@@ -29,7 +29,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/862464484546/locations/global/workloadIdentityPools/mygithub-pool/providers/github-provider'
+          workload_identity_provider: 'projects/862464484546/locations/global/workloadIdentityPools/mygithub-pool/providers/mygithub-provider'
           service_account: 'firebase-app-emulator@vault-rotation-sandbox .iam.gserviceaccount.com' 
 
       - name: Run Go Backend (Verify ADC)
