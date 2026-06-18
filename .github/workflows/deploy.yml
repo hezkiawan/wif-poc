@@ -1,0 +1,45 @@
+name: WIF Zero-Trust Authentication PoC
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-wif-auth:
+    runs-on: ubuntu-latest
+
+    # CRITICAL: This permissions block is what allows GitHub 
+    # to generate the short-lived OIDC token that Google Cloud trusts.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21' # Adjust this if your local Go version is different
+
+      # The Magic Handshake: Exchanges the GitHub OIDC token for a GCP token
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/862464484546/locations/global/workloadIdentityPools/mygithub-pool/providers/github-provider'
+          service_account: 'firebase-app-emulator@vault-rotation-sandbox .iam.gserviceaccount.com' 
+
+      - name: Run Go Backend (Verify ADC)
+        run: |
+          echo "Starting the Go backend to verify authentication..."
+          # We run the app in the background so it doesn't block the pipeline
+          go run main.go &
+          
+          # Give the server a few seconds to boot up
+          sleep 3
+          
+          # Ping the local API to prove it initialized Firebase successfully
+          curl -s http://localhost:8080/api/status
